@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transcript Summarizer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        label {
+            font-weight: bold;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #summaryContainer {
+            display: none;
+        }
+        #emailForm {
+            display: none;
+            margin-top: 20px;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+        input[type="email"], input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Transcript Summarizer</h1>
+    <div class="container">
+        <div class="input-group">
+            <label for="transcript">Upload or Paste Transcript:</label>
+            <textarea id="transcript" placeholder="Paste your meeting notes or call transcript here..."></textarea>
+        </div>
+        
+        <div class="input-group">
+            <label for="prompt">Custom Instruction/Prompt:</label>
+            <textarea id="prompt" placeholder="E.g., 'Summarize in bullet points for executives' or 'Highlight only action items'"></textarea>
+        </div>
+        
+        <button id="generateBtn">Generate Summary</button>
+        
+        <div id="summaryContainer" class="input-group">
+            <label for="summary">Generated Summary:</label>
+            <textarea id="summary" editable="true"></textarea>
+            <button id="editDoneBtn">Done Editing</button>
+        </div>
+        
+        <div id="emailForm">
+            <label for="emailRecipients">Email Recipients (comma separated):</label>
+            <input type="text" id="emailRecipients" placeholder="email1@example.com, email2@example.com">
+            <label for="emailSubject">Subject:</label>
+            <input type="text" id="emailSubject" placeholder="Meeting Summary">
+            <button id="sendEmailBtn">Send Email</button>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('generateBtn').addEventListener('click', generateSummary);
+        document.getElementById('editDoneBtn').addEventListener('click', showEmailForm);
+        document.getElementById('sendEmailBtn').addEventListener('click', sendEmail);
+
+        function generateSummary() {
+            const transcript = document.getElementById('transcript').value;
+            const prompt = document.getElementById('prompt').value;
+            
+            if (!transcript) {
+                alert('Please enter a transcript');
+                return;
+            }
+            
+            // For demo purposes, we'll simulate AI processing with a simple summary
+            // In a real app, you would call an AI API here (like Groq, OpenAI, etc.)
+            
+            // Default summary if no specific prompt is provided
+            let summary = `- Meeting discussed ${transcript.split(' ').length} words\n`;
+            summary += `- Main topics: ${transcript.substring(0, 100)}...\n`;
+            summary += `- Action items: Follow up on mentioned topics\n`;
+            
+            if (prompt) {
+                if (prompt.toLowerCase().includes('bullet')) {
+                    summary = transcript.split('.')
+                        .filter(s => s.trim().length > 0)
+                        .map(s => `• ${s.trim()}`)
+                        .join('\n');
+                } else if (prompt.toLowerCase().includes('action')) {
+                    summary = `ACTION ITEMS:\n- Schedule follow-up meeting\n- Assign tasks\n- Review proposals`;
+                }
+            }
+            
+            document.getElementById('summary').value = summary;
+            document.getElementById('summaryContainer').style.display = 'block';
+        }
+        
+        function showEmailForm() {
+            document.getElementById('emailForm').style.display = 'block';
+        }
+        
+        function sendEmail() {
+            const recipients = document.getElementById('emailRecipients').value;
+            const subject = document.getElementById('emailSubject').value;
+            const summary = document.getElementById('summary').value;
+            
+            if (!recipients) {
+                alert('Please enter at least one email recipient');
+                return;
+            }
+            
+            // In a real app, you would send this to your backend for email processing
+            const emailLink = `mailto:${recipients}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(summary)}`;
+            window.location.href = emailLink;
+            
+            alert('Email client opened. Click send to share the summary.');
+        }
+    </script>
+</body>
+</html>
+
