@@ -1,142 +1,170 @@
-import { useState, useEffect } from "react";
-
-import { copy, linkIcon, loader, tick } from "../assets";
+import { useState } from "react";
+import { loader } from "../assets";
 import { useLazyGetSummaryQuery } from "../services/article";
 
 const Demo = () => {
-  const [article, setArticle] = useState({
-    url: "",
-    summary: "",
-  });
-  const [allArticles, setAllArticles] = useState([]);
-  const [copied, setCopied] = useState("");
+  const [transcript, setTranscript] = useState("");
+  const [prompt, setPrompt] = useState("");
+  const [summary, setSummary] = useState("");
+  const [email, setEmail] = useState("");
+  const [subject, setSubject] = useState("");
 
-  // RTK lazy query
+  const [isEditing, setIsEditing] = useState(false);
+  const [showEmailForm, setShowEmailForm] = useState(false);
+
   const [getSummary, { error, isFetching }] = useLazyGetSummaryQuery();
-
-  // Load data from localStorage on mount
-  useEffect(() => {
-    const articlesFromLocalStorage = JSON.parse(
-      localStorage.getItem("articles")
-    );
-
-    if (articlesFromLocalStorage) {
-      setAllArticles(articlesFromLocalStorage);
-    }
-  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!transcript.trim()) return;
 
-    const existingArticle = allArticles.find(
-      (item) => item.url === article.url
-    );
-
-    if (existingArticle) return setArticle(existingArticle);
-
-    const { data } = await getSummary({ articleUrl: article.url });
-    if (data?.summary) {
-      const newArticle = { ...article, summary: data.summary };
-      const updatedAllArticles = [newArticle, ...allArticles];
-
-      // update state and local storage
-      setArticle(newArticle);
-      setAllArticles(updatedAllArticles);
-      localStorage.setItem("articles", JSON.stringify(updatedAllArticles));
+    try {
+      const { data } = await getSummary({ transcript, prompt });
+      if (data?.summary) {
+        setSummary(data.summary);
+        setIsEditing(true);
+        setShowEmailForm(false);
+      }
+    } catch (err) {
+      console.error("Summary fetch failed:", err);
     }
   };
 
-  // copy the url and toggle the icon for user feedback
-  const handleCopy = (copyUrl) => {
-    setCopied(copyUrl);
-    navigator.clipboard.writeText(copyUrl);
-    setTimeout(() => setCopied(false), 3000);
+  const handleDoneEditing = () => {
+    setIsEditing(false);
+    setShowEmailForm(true);
   };
 
-  const handleKeyDown = (e) => {
-    if (e.keyCode === 13) {
-      handleSubmit(e);
+  // ✅ Send email using mailto:
+  const handleSendEmail = () => {
+    if (!summary) {
+      alert("Please generate the summary first.");
+      return;
     }
+    if (!email || !subject) {
+      alert("Please enter recipient email and subject.");
+      return;
+    }
+
+    // Basic email validation
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      alert("Please enter a valid email address.");
+      return;
+    }
+
+    const mailtoLink = `mailto:${email}?subject=${encodeURIComponent(
+      subject
+    )}&body=${encodeURIComponent(summary)}`;
+
+    window.location.href = mailtoLink;
   };
 
   return (
-    <section className="mt-16 w-full max-w-xl">
-      {/* Search */}
-      <div className="flex flex-col w-full gap-2">
-        <form
-          className="relative flex justify-center items-center"
-          onSubmit={handleSubmit}
-        >
-          <img
-            src={linkIcon}
-            alt="link-icon"
-            className="absolute left-0 my-2 ml-3 w-5"
-          />
-
-          <input
-            type="url"
-            placeholder="Paste the article link"
-            value={article.url}
-            onChange={(e) => setArticle({ ...article, url: e.target.value })}
-            onKeyDown={handleKeyDown}
+    <section className="mt-16 w-full max-w-2xl">
+      {/* Transcript + Prompt Form */}
+      <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
+        <div>
+          <label className="font-bold block mb-2">
+            Upload or Paste Transcript:
+          </label>
+          <textarea
+            placeholder="Paste your meeting notes or transcript here..."
+            value={transcript}
+            onChange={(e) => setTranscript(e.target.value)}
+            className="w-full p-3 border rounded-md min-h-[120px] focus:outline-none focus:ring-2 focus:ring-green-500"
             required
-            className="url_input peer" // When you need to style an element based on the state of a sibling element, mark the sibling with the peer class, and use peer-* modifiers to style the target element
           />
-          <button
-            type="submit"
-			title="Submit"
-            className="submit_btn peer-focus:border-gray-700 peer-focus:text-gray-700 transition"
-          >
-            <p>↵</p>
-          </button>
-        </form>
-
-        {/* Browse History */}
-        <div className="flex flex-col gap-1 max-h-60 overflow-y-auto">
-          {allArticles.reverse().map((item, index) => (
-            <div
-              key={`link-${index}`}
-              onClick={() => setArticle(item)}
-              className="link_card"
-            >
-              <div className="copy_btn transition" title="Copy Link" onClick={() => handleCopy(item.url)}>
-                <img
-                  src={copied === item.url ? tick : copy}
-                  alt={copied === item.url ? "tick_icon" : "copy_icon"}
-                  className="w-[40%] h-[40%] object-contain"
-                />
-              </div>
-              <p className="flex-1 font-satoshi text-blue-700 font-medium text-sm truncate">
-                {item.url}
-              </p>
-            </div>
-          ))}
         </div>
-      </div>
+
+        <div>
+          <label className="font-bold block mb-2">Custom Instruction / Prompt:</label>
+          <textarea
+            placeholder="E.g., 'Summarize in bullet points' or 'Highlight action items'"
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            className="w-full p-3 border rounded-md min-h-[80px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
+        <button
+          type="submit"
+          className="bg-green-600 hover:bg-green-700 text-white p-3 rounded-md transition"
+        >
+          Generate Summary
+        </button>
+      </form>
 
       {/* Display Result */}
-      <div className="my-10 max-w-full flex justify-center items-center">
+      <div className="my-10 w-full flex flex-col gap-4">
         {isFetching ? (
-          <img src={loader} alt="loader" className="w-20 h-20 object-contain" />
+          <div className="flex justify-center items-center">
+            <img src={loader} alt="loader" className="w-20 h-20 object-contain" />
+          </div>
         ) : error ? (
-          <p className="font-inter font-bold text-black text-center">
-            Well, that wasn&apos;t supposed to happen...
-            <br />
-            <span className="font-satoshi font-normal text-gray-700">
-              {error?.data?.error}
-            </span>
+          <p className="text-red-600 font-bold">
+            Error: {error?.data?.error || "Failed to fetch summary"}
           </p>
         ) : (
-          article.summary && (
-            <div className="flex flex-col gap-3">
-              <h2 className="font-satoshi font-bold text-gray-600 text-xl">
-                Article <span className="blue_gradient">Summary</span>
-              </h2>
-              <div className="summary_box max-h-80 overflow-auto">
-                <p className="font-inter font-medium text-sm text-gray-700">
-                  {article.summary}
+          summary && (
+            <div className="flex flex-col gap-3 w-full">
+              <h2 className="text-xl font-bold">Generated Summary</h2>
+
+              {isEditing ? (
+                <>
+                  <textarea
+                    className="w-full p-3 border rounded-md min-h-[200px] focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    value={summary}
+                    onChange={(e) => setSummary(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md w-fit transition"
+                    onClick={handleDoneEditing}
+                  >
+                    Done Editing
+                  </button>
+                </>
+              ) : (
+                <p className="p-3 border rounded bg-gray-100 whitespace-pre-line">
+                  {summary}
                 </p>
-              </div>
+              )}
+
+              {/* Email Form */}
+              {showEmailForm && (
+                <div className="mt-4 flex flex-col gap-2 border-t pt-4">
+                  <h3 className="font-semibold">Send Summary via Email</h3>
+
+                  <input
+                    type="email"
+                    placeholder="Recipient email address"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+
+                  <input
+                    type="text"
+                    placeholder="Email Subject"
+                    value={subject}
+                    onChange={(e) => setSubject(e.target.value)}
+                    className="p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={handleSendEmail}
+                    className={`px-4 py-2 rounded text-white ${
+                      summary
+                        ? "bg-blue-600 hover:bg-blue-700"
+                        : "bg-gray-400 cursor-not-allowed"
+                    }`}
+                    disabled={!summary}
+                  >
+                    Send Email
+                  </button>
+                </div>
+              )}
             </div>
           )
         )}

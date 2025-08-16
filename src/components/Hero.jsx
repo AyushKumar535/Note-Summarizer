@@ -10,7 +10,7 @@ const Hero = () => {
           type="button"
           onClick={() =>
             window.open(
-              "https://github.com/esadakman/reactjs-ai-summarizer",
+              "https://github.com/AyushKumar535/Note-Summarizer",
               "_blank"
             )
           }
@@ -23,7 +23,7 @@ const Hero = () => {
 
       <h1 className="head_text">
         Summarize Articles with <br className="max-md:hidden" />
-        <span className="orange_gradient ">OpenAI GPT-4</span>
+        <span className="orange_gradient ">AI</span>
       </h1>
       <h2 className="desc">
         Simplify your reading with Summize, an open-source article summarizer
@@ -37,3 +37,5 @@ const Hero = () => {
 };
 
 export default Hero;
+
+

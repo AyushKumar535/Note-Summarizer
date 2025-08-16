@@ -13,7 +13,7 @@
 
 ## Project Link
 
-#### You can reach my project from [here](https://reactjs-ai-summarizer.vercel.app/) 👈
+<!-- #### You can reach my project from [here](https://reactjs-ai-summarizer.vercel.app/) 👈 -->
 
 ## Project Skeleton
 
@@ -56,33 +56,3 @@ SOLUTION
 - Tailwind CSS
 - RapidAPI
 
-To run this project;
-
-```
-# Clone the repository
-$ git clone https://github.com/esadakman/reactjs-ai-summarizer
-
-# Navigate to the project directory
-$ cd ./reactjs-ai-summarizer
-
-# Create a new .env file in the root of the project
-$ touch .env
-
-# Open the .env file in a text editor and add the following line
-# Replace 'your_rapid_api_key' with the actual key obtained from https://rapidapi.com/restyler/api/article-extractor-and-summarizer
-VITE_RAPID_API_ARTICLE_KEY=your_rapid_api_key
-
-# Save and close the .env file
-
-# Install dependencies using Vite
-$ npm install vite / yarn install vite
-
-# Start the project with Vite
-$ npm run dev / yarn dev
-
-```
-
-### Preview of the Project
- 
-<img src="./aiSummarizer.gif" alt="gif"   />
- 
