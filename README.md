@@ -56,3 +56,27 @@ SOLUTION
 - Tailwind CSS
 - RapidAPI
 
+
+# Clone the repository
+$ git clone https://github.com/AyushKumar535/Note-Summarizer
+
+# Make New Folder
+reactjs-ai-summarizer
+
+# Navigate to the project directory
+$ cd ./reactjs-ai-summarizer
+
+# Create a new .env file in the root of the project
+$ .env
+
+# Open the .env file and add the following line
+# Replace 'your_rapid_api_key' with the actual key obtained from Groq Api
+VITE_RAPID_API_ARTICLE_KEY=your_rapid_api_key
+
+# Save and close the .env file
+
+# Install dependencies using Vite
+$ npm install vite / yarn install vite
+
+# Start the project with Vite
+$ npm run dev / yarn dev
