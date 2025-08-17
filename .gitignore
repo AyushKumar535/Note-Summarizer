@@ -24,3 +24,12 @@ dist-ssr
 *.sw?
 
 .env
+PROJECT_DETAILS.md
+EMAIL_PASSWORD.txt
+EMAIL_FINAL_STATUS.md
+EMAIL_FUNCTIONALITY_CONFIRMED.md
+GMAIL_SETUP_GUIDE.md
+SETUP_AND_TESTING_GUIDE.md
+start-project.bat
+start-project.ps1
+test-complete-functionality.html

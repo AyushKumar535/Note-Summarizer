@@ -11,6 +11,7 @@ const Demo = () => {
 
   const [isEditing, setIsEditing] = useState(false);
   const [showEmailForm, setShowEmailForm] = useState(false);
+  const [isEmailSending, setIsEmailSending] = useState(false);
 
   const [getSummary, { error, isFetching }] = useLazyGetSummaryQuery();
 
@@ -35,8 +36,8 @@ const Demo = () => {
     setShowEmailForm(true);
   };
 
-  // ✅ Send email using mailto:
-  const handleSendEmail = () => {
+  // ✅ Send email using backend API
+  const handleSendEmail = async () => {
     if (!summary) {
       alert("Please generate the summary first.");
       return;
@@ -52,11 +53,45 @@ const Demo = () => {
       return;
     }
 
-    const mailtoLink = `mailto:${email}?subject=${encodeURIComponent(
-      subject
-    )}&body=${encodeURIComponent(summary)}`;
+    try {
+      // Show loading state
+      setIsEmailSending(true);
 
-    window.location.href = mailtoLink;
+      const response = await fetch("http://localhost:5000/send-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: email,
+          subject: subject,
+          summary: summary,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        alert(`✅ Email sent successfully to ${email}!`);
+        // Clear form
+        setEmail("");
+        setSubject("");
+        setShowEmailForm(false);
+
+        // Show preview URL in console for demo purposes
+        if (data.previewUrl) {
+          console.log("📧 Email preview:", data.previewUrl);
+        }
+      } else {
+        throw new Error(data.error || "Failed to send email");
+      }
+    } catch (error) {
+      console.error("Error sending email:", error);
+      alert(`❌ Failed to send email: ${error.message}`);
+    } finally {
+      // Reset loading state
+      setIsEmailSending(false);
+    }
   };
 
   return (
@@ -77,7 +112,9 @@ const Demo = () => {
         </div>
 
         <div>
-          <label className="font-bold block mb-2">Custom Instruction / Prompt:</label>
+          <label className="font-bold block mb-2">
+            Custom Instruction / Prompt:
+          </label>
           <textarea
             placeholder="E.g., 'Summarize in bullet points' or 'Highlight action items'"
             value={prompt}
@@ -98,7 +135,11 @@ const Demo = () => {
       <div className="my-10 w-full flex flex-col gap-4">
         {isFetching ? (
           <div className="flex justify-center items-center">
-            <img src={loader} alt="loader" className="w-20 h-20 object-contain" />
+            <img
+              src={loader}
+              alt="loader"
+              className="w-20 h-20 object-contain"
+            />
           </div>
         ) : error ? (
           <p className="text-red-600 font-bold">
@@ -155,13 +196,13 @@ const Demo = () => {
                     type="button"
                     onClick={handleSendEmail}
                     className={`px-4 py-2 rounded text-white ${
-                      summary
+                      summary && !isEmailSending
                         ? "bg-blue-600 hover:bg-blue-700"
                         : "bg-gray-400 cursor-not-allowed"
                     }`}
-                    disabled={!summary}
+                    disabled={!summary || isEmailSending}
                   >
-                    Send Email
+                    {isEmailSending ? "Sending Email..." : "Send Email"}
                   </button>
                 </div>
               )}
